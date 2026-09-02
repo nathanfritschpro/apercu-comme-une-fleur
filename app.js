@@ -123,16 +123,16 @@ if (y) y.textContent = new Date().getFullYear();
   });
 })();
 
-// ============ SCROLL-DRIVEN FRAMES (bouquet + pétales) ============
-(function initFlowersScroll() {
-  const canvas = document.getElementById('flowersCanvas');
+// ============ SCROLL-DRIVEN FRAMES (bouquet + pétales dans le HERO) ============
+function initHeroScroll() {
+  const canvas = document.getElementById('heroCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const section = document.querySelector('.flowers-scroll');
+  const section = document.querySelector('.hero');
+  if (!section) return;
   const TOTAL = 121;
-  const frameSrc = i => `img/frames/frame_${String(i).padStart(3, '0')}.jpg`;
+  const frameSrc = i => `img/frames/frame_${String(i + 1).padStart(3, '0')}.jpg`;
 
-  // Précharge progressive : commence par les frames critiques (0, 30, 60, 90) puis remplit
   const images = new Array(TOTAL);
   let currentDrawnIndex = -1;
 
@@ -140,43 +140,40 @@ if (y) y.textContent = new Date().getFullYear();
     if (images[i]) return images[i];
     const img = new Image();
     img.src = frameSrc(i);
+    img.addEventListener('load', () => {
+      // Si on attend cette frame (ou une frame proche), redessine
+      const target = getTargetFrame();
+      if (i === target || currentDrawnIndex < target) drawFrame(target, true);
+    });
     images[i] = img;
     return img;
   };
 
-  // Préchargement échelonné : d'abord des étapes-clés, puis tout
-  const preloadOrder = [];
-  const step = Math.floor(TOTAL / 8);
-  for (let i = 0; i < TOTAL; i += step) preloadOrder.push(i);
-  for (let i = 0; i < TOTAL; i++) if (!preloadOrder.includes(i)) preloadOrder.push(i);
-  preloadOrder.forEach((i, k) => setTimeout(() => loadImage(i), k * 30));
-
-  // Redimensionne canvas au device pixel ratio
   function resizeCanvas() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
+    if (!w || !h) return;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawFrame(currentDrawnIndex >= 0 ? currentDrawnIndex : 0, true);
+    drawFrame(currentDrawnIndex >= 0 ? currentDrawnIndex : getTargetFrame(), true);
   }
   window.addEventListener('resize', resizeCanvas);
 
-  // Dessine une frame en cover
   function drawFrame(index, force) {
     if (!force && index === currentDrawnIndex) return;
     const img = images[index] || loadImage(index);
     if (!img.complete || !img.naturalWidth) {
-      img.onload = () => { if (getTargetFrame() === index) drawFrame(index, true); };
-      // Fallback : dessine la frame précédente disponible
-      let fallback = index;
-      while (fallback > 0 && (!images[fallback] || !images[fallback].complete)) fallback--;
-      if (images[fallback] && images[fallback].complete) drawFrame(fallback, true);
+      // Fallback : dessine la frame précédente disponible (pas soi-même)
+      let fallback = index - 1;
+      while (fallback >= 0 && (!images[fallback] || !images[fallback].complete || !images[fallback].naturalWidth)) fallback--;
+      if (fallback >= 0) drawFrame(fallback, true);
       return;
     }
     const cw = canvas.clientWidth;
     const ch = canvas.clientHeight;
+    if (!cw || !ch) return;
     const iw = img.naturalWidth;
     const ih = img.naturalHeight;
     const scale = Math.max(cw / iw, ch / ih);
@@ -192,6 +189,7 @@ if (y) y.textContent = new Date().getFullYear();
   function getTargetFrame() {
     const rect = section.getBoundingClientRect();
     const total = section.offsetHeight - window.innerHeight;
+    if (total <= 0) return 0;
     const scrolled = Math.max(0, -rect.top);
     const progress = Math.min(1, Math.max(0, scrolled / total));
     return Math.min(TOTAL - 1, Math.floor(progress * (TOTAL - 1)));
@@ -208,12 +206,25 @@ if (y) y.textContent = new Date().getFullYear();
   }
   window.addEventListener('scroll', onScroll, { passive: true });
 
-  resizeCanvas();
-  // Charge la première frame en priorité
-  const first = loadImage(0);
-  if (first.complete) drawFrame(0, true);
-  else first.onload = () => drawFrame(0, true);
-})();
+  // Init : attendre le layout, puis lancer le préchargement
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    // Charge d'abord frame 0 pour affichage immédiat
+    loadImage(0);
+    // Puis préchargement échelonné : d'abord des étapes-clés, puis tout
+    const preloadOrder = [];
+    const step = Math.max(1, Math.floor(TOTAL / 10));
+    for (let i = 0; i < TOTAL; i += step) preloadOrder.push(i);
+    for (let i = 0; i < TOTAL; i++) if (!preloadOrder.includes(i)) preloadOrder.push(i);
+    preloadOrder.forEach((i, k) => setTimeout(() => loadImage(i), k * 25));
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHeroScroll);
+} else {
+  initHeroScroll();
+}
 
 // Smooth scroll pour les ancres
 document.querySelectorAll('a[href^="#"]').forEach(a => {
