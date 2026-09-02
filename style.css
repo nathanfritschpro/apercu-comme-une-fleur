@@ -439,6 +439,69 @@ p.lead { font-family: var(--display); font-style: italic; font-weight: 300; font
 }
 
 /* ============================================================
+   SCROLL-DRIVEN FRAMES — bouquet + pétales qui tombent
+   ============================================================ */
+.flowers-scroll {
+  position: relative;
+  height: 350vh;
+  background: var(--ink);
+}
+.flowers-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.flowers-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.flowers-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,.3) 100%);
+}
+.flowers-content {
+  text-align: center;
+  color: var(--paper);
+  padding: 0 40px;
+  max-width: 800px;
+}
+.flowers-content .eyebrow {
+  color: var(--blush);
+  margin-bottom: 24px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.6);
+}
+.flowers-content h2 {
+  color: var(--paper);
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  margin-bottom: 26px;
+  line-height: 1.05;
+  text-shadow: 0 4px 30px rgba(0,0,0,.6);
+}
+.flowers-content h2 em { color: var(--blush); }
+.flowers-content p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+  color: rgba(251, 248, 241, .9);
+  max-width: 560px;
+  margin: 0 auto;
+  text-shadow: 0 2px 20px rgba(0,0,0,.6);
+}
+
+/* ============================================================
    ATELIER (À propos)
    ============================================================ */
 .atelier { padding: 140px 0 120px; background: var(--paper); }
@@ -978,6 +1041,12 @@ p.lead { font-family: var(--display); font-style: italic; font-weight: 300; font
   /* SEC HEAD */
   .sec-head { margin-bottom: 34px; }
   .sec-head p { font-size: .98rem; }
+
+  /* SCROLL-DRIVEN mobile — plus court */
+  .flowers-scroll { height: 250vh; }
+  .flowers-content { padding: 0 20px; }
+  .flowers-content h2 { font-size: 2.2rem; }
+  .flowers-content p { font-size: 1rem; }
 
   /* ATELIER */
   .atelier { padding: 60px 0; }
