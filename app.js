@@ -1,13 +1,19 @@
 // Comme une Fleur — Fleuriste Mérignac · M.Création
 
-// Header opaque au scroll
+// Header opaque au scroll — reste transparent tant que l'animation hero joue
 const header = document.querySelector('.header');
-const onScroll = () => {
-  if (window.scrollY > 60) header.classList.add('scrolled');
+const heroSection = document.querySelector('.hero');
+const onHeaderScroll = () => {
+  // Seuil = fin du hero scroll-driven (quand l'anim est terminée)
+  const threshold = heroSection
+    ? Math.max(60, heroSection.offsetHeight - window.innerHeight - 20)
+    : 60;
+  if (window.scrollY > threshold) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
 };
-window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
+window.addEventListener('scroll', onHeaderScroll, { passive: true });
+window.addEventListener('resize', onHeaderScroll, { passive: true });
+onHeaderScroll();
 
 // Menu burger — lock scroll iOS-safe
 const burger = document.querySelector('.burger');
@@ -130,7 +136,7 @@ function initHeroScroll() {
   const ctx = canvas.getContext('2d');
   const section = document.querySelector('.hero');
   if (!section) return;
-  const TOTAL = 121;
+  const TOTAL = 155;
   const frameSrc = i => `img/frames/frame_${String(i + 1).padStart(3, '0')}.jpg`;
 
   const images = new Array(TOTAL);
